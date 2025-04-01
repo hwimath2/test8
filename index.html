@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title id="pageTitle"></title>
-    <script>
+  <!-- ======================= 게임 설정 및 문제 데이터 (최상단 배치) ======================= -->
+  <script>
   /* 게임 설정 및 문제 데이터 */
   const gameConfig = {
     "gameTitle": "수열의 극한에 대한 기본 성질",
@@ -28,13 +29,10 @@
           "https://github.com/hwimath2/imagrfile/blob/main/gmjsyghgs/2.png?raw=true"
         ],
         "passage": "",
-        "answer": ["1", "2"], // 예: 복수 정답
+        "answer": ["1", "2"],
         "type": "객관식",
         "score": 10,
-        "customOptions": [
-          "\\lim_{n\\to\\infty} a_n = \\alpha",
-          "\\lim_{n\\to\\infty} b_n = \\beta"
-        ]
+        "customOptions": ["\\lim_{n\\to\\infty} a_n = \\alpha", "\\lim_{n\\to\\infty} b_n = \\beta"]
       },
       {
         "id": 3,
@@ -64,7 +62,7 @@
           "https://github.com/hwimath2/imagrfile/blob/main/gmjsyghgs/5.png?raw=true"
         ],
         "passage": "",
-        "answer": ["-4"], // 주관식이지만 답이 하나일 경우 배열로 감싸도 처리됨
+        "answer": ["-4"],
         "type": "주관식",
         "score": 10,
         "placeholders": ["수렴시[극한값], 발산시[발산]"]
@@ -72,25 +70,6 @@
     ]
   };
 </script>
-
-  <!-- KaTeX 제거 -->
-  <!-- MathJax 추가 -->
-  <script type="text/javascript" id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-  </script>
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: true
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
-      }
-    };
-  </script>
-
   <style>
     /* ======================= 디자인 변수 설정 (카테고리별 정리) ======================= */
     :root {
@@ -1352,7 +1331,25 @@
       <div id="serverMessage" class="server-message"></div>
     </div>
   </div>
-
+  <!-- MathJax 추가 -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+        // 초기 렌더링 제한 설정 추가
+        ignoreHtmlClass: 'tex2jax_ignore',
+        processHtmlClass: 'has-latex'
+      }
+    };
+  </script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
  <script>
   /* 텍스트 설정 */
   const START_SCREEN_TITLE = "이름을 입력하고 게임을 시작하세요";  /* 시작 화면 제목 */
@@ -1600,30 +1597,36 @@
       // Determine layout (vertical or horizontal) - simplified
       elements.multipleChoice.classList.remove('vertical'); // Default to horizontal
 
-      /* === KaTeX 렌더링 적용된 옵션 생성 === */
+      /* === 객관식 옵션 생성 === */
       options.forEach((optText, index) => {
         const optDiv = document.createElement('div');
         optDiv.className = "option";
         optDiv.setAttribute("data-option", (index + 1).toString());
 
-        // W 접두사 제거 및 MathJax 렌더링을 위한 수식 처리
-        let processedText = optText
-          .replace(/\\Wlim/g, '\\lim')
-          .replace(/\\Wto/g, '\\to')
-          .replace(/\\Winfty/g, '\\infty')
-          .replace(/\\Walpha/g, '\\alpha')
-          .replace(/\\Wbeta/g, '\\beta');
+        if (q.customOptions) {
+          // customOptions가 있는 경우에만 MathJax 렌더링 적용
+          optDiv.className = "option has-latex"; // has-latex 클래스 추가
+          let processedText = optText
+            .replace(/\\Wlim/g, '\\lim')
+            .replace(/\\Wto/g, '\\to')
+            .replace(/\\Winfty/g, '\\infty')
+            .replace(/\\Walpha/g, '\\alpha')
+            .replace(/\\Wbeta/g, '\\beta');
 
-        optDiv.innerHTML = `$${processedText}$`;
-        
-        // MathJax 수동 렌더링 트리거
-        if (typeof MathJax !== 'undefined') {
-          MathJax.typesetPromise([optDiv]).catch((err) => {
-            console.error("MathJax rendering error:", err);
+          optDiv.innerHTML = `$${processedText}$`;
+          
+          // MathJax 수동 렌더링 트리거
+          if (typeof MathJax !== 'undefined') {
+            MathJax.typesetPromise([optDiv]).catch((err) => {
+              console.error("MathJax rendering error:", err);
+              optDiv.textContent = optText;
+            });
+          } else {
+            console.warn("MathJax not loaded yet");
             optDiv.textContent = optText;
-          });
+          }
         } else {
-          console.warn("MathJax not loaded yet");
+          // customOptions가 없는 경우 일반 텍스트로 표시
           optDiv.textContent = optText;
         }
 
@@ -2068,6 +2071,7 @@
 
   /* 페이지 로드 시 초기화 */
   window.onload = () => {
+    // 게임 타이틀은 일반 텍스트로 설정 (MathJax 렌더링 없음)
     document.getElementById("pageTitle").textContent = gameTitle;
     elements.gameTitle.textContent = gameTitle;
 
